@@ -1,0 +1,51 @@
+---
+- name: Configurar Máquinas
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Atualizar pacotes (Fedora)
+      dnf:
+        name: '*'
+        state: latest
+      when: "'app' in inventory_hostname or 'mongo' in inventory_hostname"
+
+    - name: Atualizar pacotes (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: "'app' in inventory_hostname or 'mongo' in inventory_hostname"
+
+    - name: Instalar o MongoDB (no servidor "mongo")
+      dnf:
+        name: mongodb
+        state: present
+      when: "'mongo' in inventory_hostname"
+
+    - name: Instalar Python 3 (no servidor "app")
+      dnf:
+        name: python3
+        state: present
+      when: "'app' in inventory_hostname"
+
+    - name: Criar usuário "senac" (no servidor "app")
+      user:
+        name: senac
+        state: present
+      when: "'app' in inventory_hostname"
+
+    - name: Criar diretório /app/data (no servidor "app")
+      file:
+        path: /app/data
+        state: directory
+        owner: senac
+        group: senac
+      when: "'app' in inventory_hostname"
+
+    - name: Definir permissões do diretório (no servidor "app")
+      file:
+        path: /app/data
+        owner: senac
+        group: senac
+        mode: 0755
+      when: "'app' in inventory_hostname"
+
